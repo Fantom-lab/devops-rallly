@@ -1,0 +1,258 @@
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl"]
+}
+
+enum TimeFormat {
+  hours12
+  hours24
+
+  @@map("time_format")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+  @@index([userId], type: Hash)
+  @@map("accounts")
+}
+
+model User {
+  id             String      @id @default(cuid())
+  name           String
+  email          String      @unique() @db.Citext
+  emailVerified  DateTime?   @map("email_verified")
+  image          String?
+  timeZone       String?     @map("time_zone")
+  weekStart      Int?        @map("week_start")
+  timeFormat     TimeFormat? @map("time_format")
+  locale         String?
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime?   @updatedAt @map("updated_at")
+  customerId     String?     @map("customer_id")
+  subscriptionId String?     @unique @map("subscription_id")
+
+  comments     Comment[]
+  polls        Poll[]
+  watcher      Watcher[]
+  events       Event[]
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  accounts     Account[]
+
+  @@map("users")
+}
+
+enum SubscriptionStatus {
+  active
+  paused
+  deleted
+  trialing
+  past_due
+
+  @@map("subscription_status")
+}
+
+model UserPaymentData {
+  userId         String             @id @map("user_id")
+  subscriptionId String             @map("subscription_id")
+  planId         String             @map("plan_id")
+  endDate        DateTime           @map("end_date")
+  status         SubscriptionStatus
+  updateUrl      String             @map("update_url")
+  cancelUrl      String             @map("cancel_url")
+
+  @@map("user_payment_data")
+}
+
+model Subscription {
+  id            String   @id
+  priceId       String   @map("price_id")
+  active        Boolean
+  currency      String?
+  interval      String?
+  intervalCount Int?     @map("interval_count")
+  createdAt     DateTime @default(now()) @map("created_at")
+  periodStart   DateTime @map("period_start")
+  periodEnd     DateTime @map("period_end")
+  user          User?
+
+  @@map("subscriptions")
+}
+
+enum ParticipantVisibility {
+  full
+  scoresOnly
+  limited
+
+  @@map("participant_visibility")
+}
+
+enum PollStatus {
+  live
+  paused
+  finalized
+
+  @@map("poll_status")
+}
+
+model Poll {
+  id                      String        @id @unique @map("id")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
+  deadline                DateTime?
+  title                   String
+  description             String?
+  location                String?
+  userId                  String        @map("user_id")
+  timeZone                String?       @map("time_zone")
+  closed                  Boolean       @default(false) // @deprecated
+  status                  PollStatus    @default(live)
+  deleted                 Boolean       @default(false)
+  deletedAt               DateTime?     @map("deleted_at")
+  touchedAt               DateTime      @default(now()) @map("touched_at")
+  participantUrlId        String        @unique @map("participant_url_id")
+  adminUrlId              String        @unique @map("admin_url_id")
+  eventId                 String?       @unique @map("event_id")
+  hideParticipants        Boolean       @default(false) @map("hide_participants")
+  hideScores              Boolean       @default(false) @map("hide_scores")
+  disableComments         Boolean       @default(false) @map("disable_comments")
+  requireParticipantEmail Boolean       @default(false) @map("require_participant_email")
+
+  user                    User?         @relation(fields: [userId], references: [id])
+  event                   Event?        @relation(fields: [eventId], references: [id])
+  options                 Option[]
+  participants            Participant[]
+  watchers                Watcher[]
+  comments                Comment[]
+
+  @@index([userId], type: Hash)
+  @@map("polls")
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  optionId  String   @map("option_id")
+  title     String
+  start     DateTime @db.Timestamp(0)
+  duration  Int      @default(0) @map("duration_minutes")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  poll      Poll?
+
+  @@index([userId], type: Hash)
+  @@map("events")
+}
+
+model Watcher {
+  id        Int      @id @default(autoincrement())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  pollId    String   @map("poll_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  poll      Poll     @relation(fields: [pollId], references: [id])
+
+  @@index([userId], type: Hash)
+  @@index([pollId], type: Hash)
+  @@map("watchers")
+}
+
+model Participant {
+  id        String    @id @default(cuid())
+  name      String
+  email     String?
+  userId    String?   @map("user_id")
+  poll      Poll      @relation(fields: [pollId], references: [id])
+  pollId    String    @map("poll_id")
+  votes     Vote[]
+  locale    String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+  deleted   Boolean   @default(false)
+  deletedAt DateTime? @map("deleted_at")
+
+  @@index([pollId], type: Hash)
+  @@map("participants")
+}
+
+model Option {
+  id        String   @id @default(cuid())
+  startTime DateTime @db.Timestamp(0) @map("start_time")
+  duration  Int      @default(0) @map("duration_minutes")
+  pollId    String   @map("poll_id")
+  poll      Poll     @relation(fields: [pollId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([pollId], type: Hash)
+  @@map("options")
+}
+
+enum VoteType {
+  yes
+  no
+  ifNeedBe
+
+  @@map("vote_type")
+}
+
+model Vote {
+  id            String      @id @default(cuid())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  participantId String      @map("participant_id")
+  optionId      String      @map("option_id")
+  pollId        String      @map("poll_id")
+  type          VoteType    @default(yes)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime?   @updatedAt @map("updated_at")
+
+  @@index([participantId], type: Hash)
+  @@index([optionId], type: Hash)
+  @@index([pollId], type: Hash)
+  @@map("votes")
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  content    String
+  poll       Poll      @relation(fields: [pollId], references: [id])
+  pollId     String    @map("poll_id")
+  authorName String    @map("author_name")
+  user       User?     @relation(fields: [userId], references: [id])
+  userId     String?   @map("user_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime? @updatedAt @map("updated_at")
+
+  @@index([userId], type: Hash)
+  @@index([pollId], type: Hash)
+  @@map("comments")
+}
+
+model VerificationToken {
+  identifier String   @db.Citext
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}

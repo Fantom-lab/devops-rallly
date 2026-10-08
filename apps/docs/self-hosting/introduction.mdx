@@ -1,0 +1,53 @@
+---
+icon: server
+title: Introduction
+description: How to Self-Host Rallly
+---
+
+Rallly is 100% open-source and available under the [GNU Affero General Public License v3.0 (AGPL-3.0)](https://github.com/lukevella/rallly/blob/main/LICENSE)
+which allows you to run your own instance of Rallly for free for both personal and commercial use.
+
+<Frame>
+  <img src="/images/self-hosting/splash.png" alt="Rallly Splash Image" />
+</Frame>
+
+## Official Docker Image
+
+The best way to self-host Rallly is using the [official Docker image](https://hub.docker.com/r/lukevella/rallly).
+This image contains a build that is specifically intended for self-hosting.
+It is updated regularly but it is _not_ guaranteed to be up-to-date with the latest version of Rallly.
+If you want to have access to the latest features and bug fixes, you should consider using the [official managed service](https://rallly.co).
+
+<Note>
+  Though it is technically possible to build and run Rallly from its
+  [source-code](https://github.com/lukevella/rallly), it is not recommended and
+  we do not provide support for this.
+</Note>
+
+## Live Demo
+
+If you want to try out Rallly before self-hosting it, you can try the official managed service at [app.rallly.co](https://app.rallly.co).
+This version differs slightly from the self-hosted version in that it allows guest users to create polls without having to create an account
+and is updated more frequently but it's still a good way to get a feel for the app.
+
+## Pricing
+
+Rallly is **completely free** to self-host but for users who wish to contribute to the project,
+please check out the [pricing](/self-hosting/pricing) page.
+
+## Get Started
+
+Depending on how comfortable you are with technical things, you can either run Rallly on your own server or choose a managed hosting provider that will do it for you.
+
+<CardGroup cols={2}>
+  <Card title="Docker Setup" icon="docker" href="/self-hosting/docker-compose">
+    Host your own instance of Rallly on your own server using Docker.
+  </Card>
+  <Card
+    icon="cloud"
+    title="Using a hosting provider"
+    href="/self-hosting/managed-hosting"
+  >
+    Choose a provider that will install and run an instance of Rallly for you.
+  </Card>
+</CardGroup>

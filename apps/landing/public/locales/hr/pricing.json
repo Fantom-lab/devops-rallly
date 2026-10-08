@@ -1,0 +1,21 @@
+{
+  "pricing": "Cijene",
+  "pricingDescription": "Započnite besplatno. Prijava nije potrebna.",
+  "freeForever": "besplatno zauvijek",
+  "planPro": "Pro",
+  "monthlyBillingDescription": "mjesečno",
+  "upgrade": "Nadogradi",
+  "faq": "Često postavljana pitanja",
+  "canUseFree": "Mogu li besplatno koristiti Rallly?",
+  "whyUpgrade": "Zašto bih trebao nadograditi uslugu?",
+  "howToUpgrade": "Kako mogu nadograditi na plaćenu uslugu?",
+  "howToUpgradeAnswer": "Za nadogradnju možete otići na svoje <a>postavke naplate</a> i kliknuti na <b>Nadogradi</b>.",
+  "cancelSubscription": "Kako mogu otkazati pretplatu?",
+  "cancelSubscriptionAnswer": "Svoju pretplatu možete otkazati u bilo kojem trenutku u <a>postavkama naplate</a>. Nakon što otkažete pretplatu, i dalje ćete imati pristup svojoj plaćenoj pretplati do kraja obračunskog razdoblja. Nakon toga bit ćete vraćeni na besplatnu pretplatu.",
+  "billingPeriodMonthly": "Mjesečno",
+  "billingPeriodYearly": "Godišnje",
+  "accessAllFeatures": "Pristup svim značajkama",
+  "getEarlyAccess": "Rani pristup novim značajkama",
+  "planFree": "Besplatno",
+  "keepPollsIndefinitely": "Zadržite ankete zauvijek"
+}

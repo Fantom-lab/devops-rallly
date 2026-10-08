@@ -1,0 +1,113 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [".env"],
+  "tasks": {
+    "build": {
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "build:test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*", "!tests/**/*"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "@rallly/web#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "@rallly/landing#build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "test": {
+      "inputs": ["src/**/*", "tests/**/*"],
+      "env": ["CI"],
+      "dependsOn": ["^build:test"]
+    },
+    "test:unit": {
+      "cache": true
+    },
+    "test:integration": {
+      "inputs": ["playwright.config.ts", ".env.test", "src/**/*", "tests/**/*"],
+      "cache": true
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "type-check": {
+      "outputs": []
+    },
+    "dev": {
+      "cache": false
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "@rallly/web#start": {
+      "cache": false,
+      "persistent": true
+    },
+    "@rallly/landing#start": {
+      "cache": false,
+      "persistent": true
+    },
+    "i18n:scan": {
+      "inputs": ["src/**", "i18next-scanner.config.js"],
+      "outputs": ["public/locales/**"]
+    }
+  },
+  "globalEnv": [
+    "ALLOWED_EMAILS",
+    "ANALYZE",
+    "API_SECRET",
+    "AWS_ACCESS_KEY_ID",
+    "AWS_REGION",
+    "AWS_SECRET_ACCESS_KEY",
+    "DATABASE_URL",
+    "DISABLE_LANDING_PAGE",
+    "EMAIL_PROVIDER",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "KV_REST_API_URL",
+    "MAINTENANCE_MODE",
+    "MICROSOFT_CLIENT_ID",
+    "MICROSOFT_CLIENT_SECRET",
+    "MICROSOFT_TENANT_ID",
+    "NEXT_PUBLIC_*",
+    "NEXT_RUNTIME",
+    "NODE_ENV",
+    "NOREPLY_EMAIL_NAME",
+    "NOREPLY_EMAIL",
+    "OIDC_CLIENT_ID",
+    "OIDC_CLIENT_SECRET",
+    "OIDC_DISCOVERY_URL",
+    "OIDC_EMAIL_CLAIM_PATH",
+    "OIDC_NAME_CLAIM_PATH",
+    "OIDC_NAME",
+    "OIDC_PICTURE_CLAIM_PATH",
+    "PADDLE_PUBLIC_KEY",
+    "PORT",
+    "SECRET_PASSWORD",
+    "SENTRY_AUTH_TOKEN",
+    "SENTRY_DSN",
+    "SENTRY_IGNORE_API_RESOLUTION_ERROR",
+    "SKIP_ENV_VALIDATION",
+    "SMTP_HOST",
+    "SMTP_PORT",
+    "SMTP_PWD",
+    "SMTP_SECURE",
+    "SMTP_TLS_ENABLED",
+    "SMTP_USER",
+    "STRIPE_MONTHLY_PRICE",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_SIGNING_SECRET",
+    "STRIPE_YEARLY_PRICE",
+    "SENTRY_ORG",
+    "SENTRY_PROJECT",
+    "SUPPORT_EMAIL",
+    "REACT_EMAIL_LANG"
+  ]
+}

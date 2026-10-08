@@ -1,44 +1,118 @@
 #!/bin/sh
 set -e
 
-if ! command -v docker >/dev/null 2>&1; then
-    echo "������: docker �� ����������." >&2
+echo "=== Rallly setup ==="
+
+# Проверка необходимых команд
+for cmd in docker git openssl curl; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+        echo "[FAIL] Не найдена команда: $cmd" >&2
+        exit 1
+    fi
+done
+
+# Проверка Docker Compose
+if ! docker compose version >/dev/null 2>&1; then
+    echo "[FAIL] Docker Compose недоступен." >&2
     exit 1
 fi
 
-if ! command -v git >/dev/null 2>&1; then
-    echo "������: git �� ����������." >&2
-    exit 1
-fi
-
+# Создание .env только при первом запуске
 if [ ! -f .env ]; then
-    echo "�������� .env �����..."
+    echo "[INFO] Создание .env..."
+
     cp .env.example .env
-    PG_PASS=$(openssl rand -hex 16 2>/dev/null || echo "pass_$(date +%s)")
-    SEC_PASS=$(openssl rand -hex 16 2>/dev/null || echo "sec_$(date +%s)")
-    sed -i "s/POSTGRES_PASSWORD=/POSTGRES_PASSWORD=$PG_PASS/" .env
-    sed -i "s/SECRET_PASSWORD=/SECRET_PASSWORD=$SEC_PASS/" .env
+
+    PG_PASS=$(openssl rand -hex 16)
+    SEC_PASS=$(openssl rand -hex 16)
+    AUTH_SECRET=$(openssl rand -hex 32)
+
+    sed -i "s/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=$PG_PASS/" .env
+    sed -i "s/^SECRET_PASSWORD=$/SECRET_PASSWORD=$SEC_PASS/" .env
+    sed -i "s/^NEXTAUTH_SECRET=$/NEXTAUTH_SECRET=$AUTH_SECRET/" .env
+else
+    echo "[INFO] .env уже существует, используем существующий файл."
 fi
 
-echo "������ �����������..."
-docker compose build
+echo "[INFO] Сборка Docker-образов..."
+docker compose build app migrate
 
-echo "������ ��������..."
-docker compose up -d
+echo "[INFO] Запуск PostgreSQL и Redis..."
+docker compose up -d db redis
 
-echo "�������� ���������� ��������..."
-sleep 10
+echo "[INFO] Ожидание PostgreSQL..."
 
-echo "�������� �����������..."
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "000")
+i=0
+while [ "$i" -lt 30 ]; do
+    if docker compose exec -T db pg_isready \
+        -U "$(grep '^POSTGRES_USER=' .env | cut -d= -f2-)" \
+        -d "$(grep '^POSTGRES_DB=' .env | cut -d= -f2-)" \
+        >/dev/null 2>&1; then
+        echo "[OK] PostgreSQL готов."
+        break
+    fi
 
-echo "=== ��������� ==="
-echo "HTTP ���: $HTTP_CODE"
+    i=$((i + 1))
+    sleep 2
+done
 
-if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "302" ]; then
-    echo "[OK] ���������� ��������!"
-    exit 0
-else
-    echo "[FAIL] ������ �������"
+if [ "$i" -ge 30 ]; then
+    echo "[FAIL] PostgreSQL не запустился." >&2
     exit 1
 fi
+
+echo "[INFO] Применение миграций..."
+docker compose run --rm migrate
+
+echo "[INFO] Загрузка тестовых данных..."
+
+# Seed выполняем только если в БД ещё нет пользователей.
+USER_COUNT=$(docker compose exec -T db \
+    psql -U "$(grep '^POSTGRES_USER=' .env | cut -d= -f2-)" \
+    -d "$(grep '^POSTGRES_DB=' .env | cut -d= -f2-)" \
+    -tAc "SELECT COUNT(*) FROM users;" 2>/dev/null || echo "0")
+
+USER_COUNT=$(echo "$USER_COUNT" | tr -d '[:space:]')
+
+if [ "$USER_COUNT" = "0" ]; then
+    docker compose run --rm migrate \
+        sh -c 'yarn workspace @rallly/database db:seed'
+    echo "[OK] Тестовые данные загружены."
+else
+    echo "[INFO] Тестовые данные уже существуют, seed пропущен."
+fi
+
+echo "[INFO] Запуск Rallly..."
+docker compose up -d app redis
+
+echo "[INFO] Ожидание приложения..."
+
+i=0
+while [ "$i" -lt 30 ]; do
+    CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+        http://localhost:3000/ 2>/dev/null || echo "000")
+
+    if [ "$CODE" = "200" ]; then
+        echo "[OK] Rallly отвечает HTTP 200."
+        break
+    fi
+
+    i=$((i + 1))
+    sleep 2
+done
+
+if [ "$i" -ge 30 ]; then
+    echo "[FAIL] Rallly не отвечает." >&2
+    docker compose ps
+    exit 1
+fi
+
+echo ""
+echo "=== Rallly успешно запущен ==="
+echo "Приложение: http://localhost:3000"
+echo "Логин:      http://localhost:3000/login"
+echo ""
+
+docker compose ps
+
+exit 0
