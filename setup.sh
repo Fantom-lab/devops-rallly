@@ -101,9 +101,10 @@ while [ "$i" -lt 60 ]; do
     sleep 2
 done
 
-if [ "$i" -ge 30 ]; then
+if [ "$i" -ge 60 ]; then
     echo "[FAIL] Rallly не отвечает." >&2
     docker compose ps
+    docker compose logs --no-color --tail=100 app
     exit 1
 fi
 
