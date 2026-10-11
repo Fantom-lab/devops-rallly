@@ -88,7 +88,7 @@ docker compose up -d app redis
 echo "[INFO] Ожидание приложения..."
 
 i=0
-while [ "$i" -lt 30 ]; do
+while [ "$i" -lt 60 ]; do
     CODE=$(curl -s -o /dev/null -w "%{http_code}" \
         http://localhost:3000/ 2>/dev/null || echo "000")
 
