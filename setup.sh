@@ -29,7 +29,28 @@ if [ ! -f .env ]; then
 
     sed -i "s/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=$PG_PASS/" .env
     sed -i "s/^SECRET_PASSWORD=$/SECRET_PASSWORD=$SEC_PASS/" .env
-    sed -i "s/^NEXTAUTH_SECRET=$/NEXTAUTH_SECRET=$AUTH_SECRET/" .env
+
+    if grep -q '^NEXTAUTH_SECRET=' .env; then
+        sed -i "s|^NEXTAUTH_SECRET=.*|NEXTAUTH_SECRET=$AUTH_SECRET|" .env
+    else
+        echo "NEXTAUTH_SECRET=$AUTH_SECRET" >> .env
+    fi
+
+    if grep -q '^NEXTAUTH_URL=' .env; then
+        sed -i 's|^NEXTAUTH_URL=.*|NEXTAUTH_URL=http://localhost:3000|' .env
+    else
+        echo "NEXTAUTH_URL=http://localhost:3000" >> .env
+    fi
+
+    if grep -q '^NEXT_PUBLIC_APP_URL=' .env; then
+        sed -i 's|^NEXT_PUBLIC_APP_URL=.*|NEXT_PUBLIC_APP_URL=http://localhost:3000|' .env
+    else
+        echo "NEXT_PUBLIC_APP_URL=http://localhost:3000" >> .env
+    fi
+
+    if ! grep -q '^SUPPORT_EMAIL=' .env; then
+        echo "SUPPORT_EMAIL=support@example.com" >> .env
+    fi
 else
     echo "[INFO] .env уже существует, используем существующий файл."
 fi
