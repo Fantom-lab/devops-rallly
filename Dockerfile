@@ -17,6 +17,8 @@ CMD ["yarn", "db:deploy"]
 
 FROM base AS builder
 WORKDIR /app
+ENV NEXT_PUBLIC_SELF_HOSTED=true
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY . .
