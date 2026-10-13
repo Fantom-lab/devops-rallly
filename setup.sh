@@ -144,7 +144,7 @@ i=0
 CODE="000"
 
 while [ "$i" -lt 60 ]; do
-    CODE=$(curl --connect-timeout 5 --max-time 10 \
+    CODE=$(curl -L --connect-timeout 5 --max-time 10 \
         -sS -o /dev/null -w "%{http_code}" \
         http://localhost:3000/ 2>/dev/null) || CODE="000"
 
@@ -163,7 +163,6 @@ if [ "$CODE" != "200" ]; then
     dc logs --no-color --tail=100 app
     exit 1
 fi
-
 
 echo ""
 echo "=== Rallly успешно запущен ==="
