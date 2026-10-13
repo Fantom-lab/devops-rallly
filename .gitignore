@@ -6,3 +6,9 @@ node_modules
 .env.development
 
 .vscode/
+
+# Локальные резервные копии и загруженный upstream
+setup.sh.backup
+Dockerfile.backup
+docker-compose.yml.backup
+.rallly-source/
