@@ -142,8 +142,9 @@ dc up -d app redis
 echo "[INFO] Ожидание приложения..."
 i=0
 while [ "$i" -lt 60 ]; do
-    CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-        http://localhost:3000/ 2>/dev/null || true)
+    CODE=$(curl --connect-timeout 5 --max-time 10 -sS \
+    -o /dev/null -w "%{http_code}" \
+    http://localhost:3000/ 2>&1) || CODE="000"
 
     if [ "$CODE" = "200" ]; then
         echo "[OK] Rallly отвечает HTTP 200."
