@@ -7,7 +7,7 @@ FAILED=0
 check_endpoint() {
     PATH_REQ="$1"
     EXPECTED="$2"
-    CODE=$(curl -s -o /dev/null -w "%{http_code}" "$HOST$PATH_REQ" || echo "000")
+    CODE=$(curl -L --connect-timeout 5 --max-time 20 -sS -o /dev/null -w "%{http_code}" "$HOST$PATH_REQ") || CODE="000"
     
     if [ "$CODE" = "$EXPECTED" ]; then
         echo "[OK] GET $PATH_REQ (got $CODE)"
